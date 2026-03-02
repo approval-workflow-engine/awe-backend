@@ -1,7 +1,7 @@
-import { db, DbErrorCode, isDbError } from "../../database.js";
-import { DuplicateError } from "../../errors/DuplicateError.js";
-import { RepositoryError } from "../../errors/RepositoryError.js";
-import type { DB, Organization } from "../../types/database.js";
+import { db, DbErrorCode, isDbError } from "../database.js";
+import { DuplicateError } from "../errors/DuplicateError.js";
+import { RepositoryError } from "../errors/RepositoryError.js";
+import type { DB, Organization } from "../types/database.js";
 import type { Insertable, Transaction, Updateable } from "kysely";
 
 type NewOrganization = Insertable<Organization>;

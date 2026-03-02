@@ -1,6 +1,6 @@
-import { db } from "../../database.js";
-import { RepositoryError } from "../../errors/RepositoryError.js";
-import type { DB, Actor } from "../../types/database.js";
+import { db } from "../database.js";
+import { RepositoryError } from "../errors/RepositoryError.js";
+import type { DB, Actor } from "../types/database.js";
 import type { Transaction, Insertable } from "kysely";
 
 type NewActor = Insertable<Actor>;

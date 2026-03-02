@@ -1,5 +1,5 @@
-import { db } from "../../database.js";
-import type { Environment } from "../../types/database.js";
+import { db } from "../database.js";
+import type { Environment } from "../types/database.js";
 import type { Insertable } from "kysely";
 
 type NewEnvironment = Insertable<Environment>;

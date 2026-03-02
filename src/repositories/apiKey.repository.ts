@@ -1,5 +1,5 @@
-import { db } from "../../database.js";
-import type { ApiKey } from "../../types/database.js";
+import { db } from "../database.js";
+import type { ApiKey } from "../types/database.js";
 import type { Insertable, Updateable } from "kysely";
 
 type NewApiKey = Insertable<ApiKey>;
