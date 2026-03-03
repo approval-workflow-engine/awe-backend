@@ -3,4 +3,4 @@ import { systemRouter } from "./system.routes.js";
 
 export const router = Router();
 
-router.use("/v1/systems", systemRouter);
+router.use("/api/v1/systems", systemRouter);
