@@ -1,6 +1,8 @@
 import { AppError } from "./errors/AppError.js";
 
 const Config = {
+  DATABASE_URL: process.env.DATABASE_URL,
+  FRONTEND_URL: process.env.FRONTEND_URL,
   JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET,
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET,
   JWT_ACCESS_EXPIRES_MINS: process.env.JWT_ACCESS_EXPIRES_MINS,
