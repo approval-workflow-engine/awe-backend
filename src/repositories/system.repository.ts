@@ -20,7 +20,7 @@ export const systemRepository = {
   findByOrganizationId: async (
     organizationId: string,
     transaction?: Transaction<DB>,
-  ) => {
+  ): Promise<SystemModel | undefined> => {
     return await (transaction ?? db)
       .selectFrom("system")
       .selectAll()

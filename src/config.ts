@@ -1,0 +1,23 @@
+import { AppError } from "./errors/AppError.js";
+
+const Config = {
+  JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET,
+  JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET,
+  JWT_ACCESS_EXPIRES_MINS: process.env.JWT_ACCESS_EXPIRES_MINS,
+  JWT_REFRESH_EXPIRES_DAYS: process.env.JWT_REFRESH_EXPIRES_DAYS,
+};
+
+function validateConfig(config: Record<string, string | undefined>) {
+  const missing = Object.entries(config)
+    .filter(([_, value]) => !value)
+    .map(([key]) => key);
+
+  if (missing.length > 0) {
+    throw new AppError(`Missing environment variables: ${missing.join(", ")}`);
+  }
+}
+
+validateConfig(Config);
+
+type ConfigType = Record<keyof typeof Config, string>;
+export default Config as ConfigType;

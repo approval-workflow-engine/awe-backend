@@ -5,4 +5,4 @@ import { authRouter } from "./auth.routes.js";
 export const router = Router();
 
 router.use("/api/v1/systems", systemRouter);
-router.use("api/v1/auth", authRouter);
+router.use("/api/v1/auth", authRouter);
