@@ -3,6 +3,7 @@ import { DuplicateError } from "../errors/DuplicateError.js";
 import { RepositoryError } from "../errors/RepositoryError.js";
 import type { DB, Organization } from "../types/database.js";
 import type { Insertable, Transaction, Updateable } from "kysely";
+import type { OrganizationModel } from "../types/models.js";
 
 type NewOrganization = Insertable<Organization>;
 type UpdateOrganization = Updateable<Organization>;
@@ -34,7 +35,10 @@ export const organizationRepository = {
       .executeTakeFirst();
   },
 
-  insert: async (data: NewOrganization, transaction?: Transaction<DB>) => {
+  insert: async (
+    data: NewOrganization,
+    transaction?: Transaction<DB>,
+  ): Promise<OrganizationModel> => {
     try {
       return await (transaction ?? db)
         .insertInto("organization")

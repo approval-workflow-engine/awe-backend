@@ -3,6 +3,9 @@ import { db } from "../database.js";
 import { ActorTypes } from "../types/enums.js";
 import { actorRepository } from "../repositories/actor.repository.js";
 import { organizationRepository } from "../repositories/organization.repository.js";
+import type { Transaction } from "kysely";
+import type { DB } from "../types/database.js";
+import type { OrganizationModel } from "../types/models.js";
 
 export type CreateOrganizationInput = {
   name: string;
@@ -11,10 +14,15 @@ export type CreateOrganizationInput = {
 };
 
 export const organizationService = {
-  create: async (data: CreateOrganizationInput) => {
+  create: async (
+    data: CreateOrganizationInput,
+    transaction?: Transaction<DB>,
+  ) => {
     const passwordHash = await argon2.hash(data.password);
 
-    return await db.transaction().execute(async (transaction) => {
+    const createNewOrganization = async (
+      transaction: Transaction<DB>,
+    ): Promise<OrganizationModel> => {
       const actor = await actorRepository.insert(
         { type: ActorTypes.ORGANIZATION_ACCOUNT },
         transaction,
@@ -29,6 +37,14 @@ export const organizationService = {
         },
         transaction,
       );
-    });
+    };
+
+    if (transaction) {
+      return await createNewOrganization(transaction);
+    }
+
+    return await db
+      .transaction()
+      .execute(async (transaction) => createNewOrganization(transaction));
   },
 };
