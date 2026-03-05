@@ -550,6 +550,14 @@ export interface RealtimeSubscription {
   subscription_id: string;
 }
 
+export interface RefreshToken {
+  created_on: Generated<Timestamp | null>;
+  expires_at: Timestamp;
+  id: Generated<string>;
+  organization_id: string | null;
+  token: string;
+}
+
 export interface StorageBuckets {
   allowed_mime_types: string[] | null;
   avif_autodetection: Generated<boolean | null>;
@@ -776,6 +784,7 @@ export interface DB {
   "realtime.messages": RealtimeMessages;
   "realtime.schema_migrations": RealtimeSchemaMigrations;
   "realtime.subscription": RealtimeSubscription;
+  refresh_token: RefreshToken;
   "storage.buckets": StorageBuckets;
   "storage.buckets_analytics": StorageBucketsAnalytics;
   "storage.buckets_vectors": StorageBucketsVectors;
