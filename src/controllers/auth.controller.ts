@@ -1,9 +1,16 @@
 import type { Request, Response } from "express";
 import { authService } from "../services/auth.service.js";
+import { z } from "zod";
+
+const LoginCred = z.object({
+  email: z.email(),
+  password: z.string()
+})
+
 
 export const authController = {
   login: async (req: Request, res: Response) => {
-    const { email, password } = req.body;
+    const { email, password } = LoginCred.parse(req.body);
 
     const { organization, system, environment, accessToken, refreshToken } =
       await authService.login(email, password);
