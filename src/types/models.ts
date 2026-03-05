@@ -1,6 +1,7 @@
 import type { Selectable } from "kysely";
 import type {
   Actor,
+  ApiKey,
   Environment,
   Organization,
   RefreshToken,
@@ -16,3 +17,5 @@ export type SystemModel = Selectable<System>;
 export type EnvironmentModel = Selectable<Environment>;
 
 export type RefreshTokenModel = Selectable<RefreshToken>;
+
+export type ApiKeyModel = Selectable<ApiKey>;
