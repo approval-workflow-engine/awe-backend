@@ -14,7 +14,7 @@ import type {
 
 export type CreateProductionSystemInput = {
   organization: CreateOrganizationInput;
-  system: { name: string; description?: string };
+  system: { name: string; description?: string | null };
 };
 
 export type CreateProductionSystemOutput = {

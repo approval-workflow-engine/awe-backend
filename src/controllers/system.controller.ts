@@ -1,17 +1,18 @@
 import type { Request, Response } from "express";
 import { systemService } from "../services/system.services.js";
+import { z } from "zod";
 
-export type RegisterSystemInput = {
-  name: string;
-  orgName: string;
-  contactEmail: string;
-  password: string;
-  description?: string;
-};
+const RegisterSystemInput = z.object({
+  name: z.string().max(255),
+  orgName: z.string().max(255),
+  contactEmail: z.email(),
+  password: z.string(),
+  description: z.string().nullable().optional(),
+});
 
 export const systemController = {
   register: async (req: Request, res: Response) => {
-    const data = req.body;
+    const data = RegisterSystemInput.parse(req.body);
     const { organization, system, environment } =
       await systemService.createProduction({
         organization: {
@@ -21,21 +22,18 @@ export const systemController = {
         },
         system: {
           name: data.name,
-          description: data.description,
+          ...(data.description !== undefined && { description: data.description }),
         },
       });
 
     res.status(201).json({
-      success: true,
-      data: {
-        system: {
-          id: system.id,
-          name: system.name,
-          orgName: organization.name,
-          contactEmail: organization.email,
-          environmentType: environment.type,
-          createdAt: system.created_on,
-        },
+      system: {
+        id: system.id,
+        name: system.name,
+        orgName: organization.name,
+        contactEmail: organization.email,
+        environmentType: environment.type,
+        createdAt: system.created_on,
       },
     });
   },
