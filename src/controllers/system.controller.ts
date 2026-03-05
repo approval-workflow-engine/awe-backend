@@ -7,7 +7,7 @@ const RegisterSystemInput = z.object({
   orgName: z.string().max(255),
   contactEmail: z.email(),
   password: z.string(),
-  description: z.string().nullable(),
+  description: z.string().nullable().optional(),
 });
 
 export const systemController = {
@@ -22,7 +22,7 @@ export const systemController = {
         },
         system: {
           name: data.name,
-          description: data.description,
+          ...(data.description !== undefined && { description: data.description }),
         },
       });
 
