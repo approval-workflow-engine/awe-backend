@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import { router } from "./routes/index.js";
 import Config from "./config.js";
+import { errorHandler } from "./middlewares/error.middleware.js";
 
 const app = express();
 
@@ -14,5 +15,7 @@ app.get("/health", (_, res) => {
 });
 
 app.use(router);
+
+app.use(errorHandler);
 
 export default app;
