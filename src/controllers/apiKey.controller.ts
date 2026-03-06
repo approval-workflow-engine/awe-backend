@@ -16,7 +16,8 @@ export const apiKeyController = {
           id: apiKey.id,
           label: apiKey.label,
           isRevoked: apiKey.is_revoked,
-          modifiedAt: apiKey.modified_on,
+          createdAt: apiKey.created_on,
+          revokedAt: apiKey.revoked_on,
         };
       }),
     });

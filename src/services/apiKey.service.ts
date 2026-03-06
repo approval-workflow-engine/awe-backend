@@ -7,6 +7,8 @@ import { ActorTypes } from "../types/enums.js";
 import type { ActorModel } from "../types/models.js";
 import crypto from "node:crypto";
 import argon2 from "argon2";
+import { db } from "../database.js";
+import { actorRepository } from "../repositories/actor.repository.js";
 
 export const apiKeyService = {
   getAll: async (actor: ActorModel) => {
@@ -30,17 +32,32 @@ export const apiKeyService = {
       throw new DataIntegrityError("No environment exists for organization");
     }
 
-    const rawKey = `${Config.API_KEY_PREFIX}${crypto.randomBytes(32).toString("hex")}`;
+    const prefix = `${Config.API_KEY_PREFIX}_${crypto.randomBytes(4).toString("hex")}`;
+    const secret = crypto.randomBytes(32).toString("hex");
+    const rawKey = `${prefix}.${secret}`;
+    const secretHash = await argon2.hash(secret);
 
-    const apiKey = await apiKeyRepository.insert({
-      actor_id: actor.id,
-      environment_id: environment.id,
-      label: label,
-      key_prefix: Config.API_KEY_PREFIX,
-      key_hash: await argon2.hash(rawKey),
+    return await db.transaction().execute(async (transaction) => {
+      const apiKeyActor = await actorRepository.insert(
+        {
+          type: ActorTypes.API_KEY_CLIENT,
+        },
+        transaction,
+      );
+
+      const apiKey = await apiKeyRepository.insert(
+        {
+          actor_id: apiKeyActor.id,
+          environment_id: environment.id,
+          label: label,
+          key_prefix: prefix,
+          key_hash: secretHash,
+        },
+        transaction,
+      );
+
+      return { rawKey, apiKey };
     });
-
-    return { rawKey, apiKey };
   },
 
   revoke: async (id: string, actor: ActorModel) => {
@@ -49,5 +66,29 @@ export const apiKeyService = {
     }
 
     return await apiKeyRepository.revokeById(id);
+  },
+
+  getActorOrThrow: async (apiKeySecret: string) => {
+    const [prefix, secret] = apiKeySecret.split(".", 2);
+    if (!prefix || !secret) {
+      throw new AuthError("Invalid Api Key");
+    }
+
+    const apiKey = await apiKeyRepository.findByPrefix(prefix);
+
+    if (
+      !apiKey ||
+      apiKey.is_revoked ||
+      !(await argon2.verify(apiKey.key_hash, secret))
+    ) {
+      throw new AuthError();
+    }
+
+    const actor = await actorRepository.findById(apiKey.actor_id);
+    if (!actor) {
+      throw new DataIntegrityError("Api key exists without Actor");
+    }
+
+    return actor;
   },
 };

@@ -1,6 +1,6 @@
 import { db } from "../database.js";
-import type { ApiKey } from "../types/database.js";
-import type { Insertable, Updateable } from "kysely";
+import type { ApiKey, DB } from "../types/database.js";
+import type { Insertable, Transaction, Updateable } from "kysely";
 import type { ApiKeyModel } from "../types/models.js";
 import { RepositoryError } from "../errors/RepositoryError.js";
 
@@ -8,15 +8,6 @@ type NewApiKey = Insertable<ApiKey>;
 type UpdateApiKey = Updateable<ApiKey>;
 
 export const apiKeyRepository = {
-  findById: async (id: string) => {
-    return await db
-      .selectFrom("api_key")
-      .selectAll()
-      .where("id", "=", id)
-      .where("is_deleted", "=", false)
-      .executeTakeFirst();
-  },
-
   findByOrganizationActorId: async (actorId: string) => {
     return await db
       .selectFrom("api_key")
@@ -38,9 +29,21 @@ export const apiKeyRepository = {
       .execute();
   },
 
-  insert: async (data: NewApiKey): Promise<ApiKeyModel> => {
+  findByPrefix: async (prefix: string) => {
+    return await db
+      .selectFrom("api_key")
+      .selectAll()
+      .where("key_prefix", "=", prefix)
+      .where("is_deleted", "=", false)
+      .executeTakeFirst();
+  },
+
+  insert: async (
+    data: NewApiKey,
+    transaction?: Transaction<DB>,
+  ): Promise<ApiKeyModel> => {
     try {
-      return await db
+      return await (transaction ?? db)
         .insertInto("api_key")
         .values(data)
         .returningAll()
