@@ -1,6 +1,6 @@
 import { db } from "../database.js";
-import type { ApiKey } from "../types/database.js";
-import type { Insertable, Updateable } from "kysely";
+import type { ApiKey, DB } from "../types/database.js";
+import type { Insertable, Transaction, Updateable } from "kysely";
 import type { ApiKeyModel } from "../types/models.js";
 import { RepositoryError } from "../errors/RepositoryError.js";
 
@@ -38,9 +38,12 @@ export const apiKeyRepository = {
       .execute();
   },
 
-  insert: async (data: NewApiKey): Promise<ApiKeyModel> => {
+  insert: async (
+    data: NewApiKey,
+    transaction?: Transaction<DB>,
+  ): Promise<ApiKeyModel> => {
     try {
-      return await db
+      return await (transaction ?? db)
         .insertInto("api_key")
         .values(data)
         .returningAll()

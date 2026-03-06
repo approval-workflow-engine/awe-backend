@@ -7,6 +7,8 @@ import { ActorTypes } from "../types/enums.js";
 import type { ActorModel } from "../types/models.js";
 import crypto from "node:crypto";
 import argon2 from "argon2";
+import { db } from "../database.js";
+import { actorRepository } from "../repositories/actor.repository.js";
 
 export const apiKeyService = {
   getAll: async (actor: ActorModel) => {
@@ -30,17 +32,23 @@ export const apiKeyService = {
       throw new DataIntegrityError("No environment exists for organization");
     }
 
-    const rawKey = `${Config.API_KEY_PREFIX}${crypto.randomBytes(32).toString("hex")}`;
+    return await db.transaction().execute(async (transaction) => {
+      const rawKey = `${Config.API_KEY_PREFIX}${crypto.randomBytes(32).toString("hex")}`;
 
-    const apiKey = await apiKeyRepository.insert({
-      actor_id: actor.id,
-      environment_id: environment.id,
-      label: label,
-      key_prefix: Config.API_KEY_PREFIX,
-      key_hash: await argon2.hash(rawKey),
+      const apiKeyActor = await actorRepository.insert({
+        type: ActorTypes.API_KEY_CLIENT,
+      }, transaction);
+
+      const apiKey = await apiKeyRepository.insert({
+        actor_id: apiKeyActor.id,
+        environment_id: environment.id,
+        label: label,
+        key_prefix: Config.API_KEY_PREFIX,
+        key_hash: await argon2.hash(rawKey),
+      }, transaction);
+
+      return { rawKey, apiKey };
     });
-
-    return { rawKey, apiKey };
   },
 
   revoke: async (id: string, actor: ActorModel) => {
