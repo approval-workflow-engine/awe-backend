@@ -1,6 +1,8 @@
 import { db } from "../database.js";
 import type { ApiKey } from "../types/database.js";
 import type { Insertable, Updateable } from "kysely";
+import type { ApiKeyModel } from "../types/models.js";
+import { RepositoryError } from "../errors/RepositoryError.js";
 
 type NewApiKey = Insertable<ApiKey>;
 type UpdateApiKey = Updateable<ApiKey>;
@@ -15,12 +17,16 @@ export const apiKeyRepository = {
       .executeTakeFirst();
   },
 
-  findByActorId: async (actorId: string) => {
+  findByOrganizationActorId: async (actorId: string) => {
     return await db
       .selectFrom("api_key")
-      .selectAll()
-      .where("actor_id", "=", actorId)
-      .executeTakeFirst();
+      .innerJoin("environment", "environment.id", "api_key.environment_id")
+      .innerJoin("system", "system.id", "environment.system_id")
+      .innerJoin("organization", "organization.id", "system.organization_id")
+      .selectAll("api_key")
+      .where("organization.actor_id", "=", actorId)
+      .where("api_key.is_deleted", "=", false)
+      .execute();
   },
 
   findByEnvironmentId: async (environmentId: string) => {
@@ -32,12 +38,16 @@ export const apiKeyRepository = {
       .execute();
   },
 
-  insert: async (data: NewApiKey) => {
-    return await db
-      .insertInto("api_key")
-      .values(data)
-      .returningAll()
-      .executeTakeFirst();
+  insert: async (data: NewApiKey): Promise<ApiKeyModel> => {
+    try {
+      return await db
+        .insertInto("api_key")
+        .values(data)
+        .returningAll()
+        .executeTakeFirstOrThrow();
+    } catch (err) {
+      throw new RepositoryError("Api key insert failed", err);
+    }
   },
 
   updateById: async (id: string, data: UpdateApiKey) => {
@@ -52,6 +62,21 @@ export const apiKeyRepository = {
       .where("is_deleted", "=", false)
       .returningAll()
       .executeTakeFirst();
+  },
+
+  revokeById: async (id: string): Promise<ApiKeyModel> => {
+    try {
+      return await db
+        .updateTable("api_key")
+        .set({ is_revoked: true, revoked_on: new Date() })
+        .where("id", "=", id)
+        .where("is_revoked", "=", false)
+        .where("is_deleted", "=", false)
+        .returningAll()
+        .executeTakeFirstOrThrow();
+    } catch (err) {
+      throw new RepositoryError("Revoke API key failed");
+    }
   },
 
   deleteById: async (id: string) => {
