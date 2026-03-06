@@ -1,9 +1,8 @@
 import type { NextFunction, Request, Response } from "express";
 import { AuthError } from "../errors/AuthError.js";
-import jwt from "jsonwebtoken";
-import Config from "../config.js";
 import type { ActorModel } from "../types/models.js";
-import { AppError } from "../errors/AppError.js";
+import { authService } from "../services/auth.service.js";
+import { apiKeyService } from "../services/apiKey.service.js";
 
 declare global {
   namespace Express {
@@ -13,14 +12,14 @@ declare global {
   }
 }
 
-export const authenticateRequest = (
+export const authenticateRequest = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
   const authHeader = req.headers.authorization;
   if (!authHeader) {
-    throw new AuthError("Missing Authorization header");
+    throw new AuthError();
   }
 
   const [name, value] = authHeader.split(" ");
@@ -29,27 +28,15 @@ export const authenticateRequest = (
     throw new AuthError();
   }
 
-  try {
-    if (name === "Bearer") {
-  
-      const payload = jwt.verify(
-        value,
-        Config.JWT_ACCESS_SECRET,
-      ) as { actor: ActorModel };
-
-      req.actor = payload.actor;
-    } else if (name === "API-Key") {
-      req;
-    } else {
-      throw new AuthError();
-    }
-
-    next();
-  } catch (err) {
-    if (err instanceof AppError) {
-      throw err;
-    }
-
-    throw new AuthError();
+  if (name === "Bearer") {
+    req.actor = authService.getActorOrThrow(value);
+    return next();
   }
+
+  if (name === "ApiKey") {
+    req.actor = await apiKeyService.getActorOrThrow(value);
+    return next();
+  }
+
+  throw new AuthError();
 };

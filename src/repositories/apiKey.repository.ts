@@ -8,15 +8,6 @@ type NewApiKey = Insertable<ApiKey>;
 type UpdateApiKey = Updateable<ApiKey>;
 
 export const apiKeyRepository = {
-  findById: async (id: string) => {
-    return await db
-      .selectFrom("api_key")
-      .selectAll()
-      .where("id", "=", id)
-      .where("is_deleted", "=", false)
-      .executeTakeFirst();
-  },
-
   findByOrganizationActorId: async (actorId: string) => {
     return await db
       .selectFrom("api_key")
@@ -36,6 +27,15 @@ export const apiKeyRepository = {
       .where("environment_id", "=", environmentId)
       .where("is_deleted", "=", false)
       .execute();
+  },
+
+  findByPrefix: async (prefix: string) => {
+    return await db
+      .selectFrom("api_key")
+      .selectAll()
+      .where("key_prefix", "=", prefix)
+      .where("is_deleted", "=", false)
+      .executeTakeFirst();
   },
 
   insert: async (

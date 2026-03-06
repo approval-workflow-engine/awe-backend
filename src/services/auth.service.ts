@@ -100,4 +100,20 @@ export const authService = {
       }
     }
   },
+
+  getActorOrThrow: (accessToken: string) => {
+    try {
+      const payload = jwt.verify(accessToken, Config.JWT_ACCESS_SECRET) as {
+        actor: ActorModel;
+      };
+
+      return payload.actor;
+    } catch (err) {
+      if (err instanceof jwt.JsonWebTokenError) {
+        throw new AuthError("Invalid access token", err);
+      }
+
+      throw err;
+    }
+  },
 };

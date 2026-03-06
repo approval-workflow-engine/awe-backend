@@ -32,20 +32,29 @@ export const apiKeyService = {
       throw new DataIntegrityError("No environment exists for organization");
     }
 
+    const prefix = `${Config.API_KEY_PREFIX}_${crypto.randomBytes(4).toString("hex")}`;
+    const secret = crypto.randomBytes(32).toString("hex");
+    const rawKey = `${prefix}.${secret}`;
+    const secretHash = await argon2.hash(secret);
+
     return await db.transaction().execute(async (transaction) => {
-      const rawKey = `${Config.API_KEY_PREFIX}${crypto.randomBytes(32).toString("hex")}`;
+      const apiKeyActor = await actorRepository.insert(
+        {
+          type: ActorTypes.API_KEY_CLIENT,
+        },
+        transaction,
+      );
 
-      const apiKeyActor = await actorRepository.insert({
-        type: ActorTypes.API_KEY_CLIENT,
-      }, transaction);
-
-      const apiKey = await apiKeyRepository.insert({
-        actor_id: apiKeyActor.id,
-        environment_id: environment.id,
-        label: label,
-        key_prefix: Config.API_KEY_PREFIX,
-        key_hash: await argon2.hash(rawKey),
-      }, transaction);
+      const apiKey = await apiKeyRepository.insert(
+        {
+          actor_id: apiKeyActor.id,
+          environment_id: environment.id,
+          label: label,
+          key_prefix: prefix,
+          key_hash: secretHash,
+        },
+        transaction,
+      );
 
       return { rawKey, apiKey };
     });
@@ -57,5 +66,29 @@ export const apiKeyService = {
     }
 
     return await apiKeyRepository.revokeById(id);
+  },
+
+  getActorOrThrow: async (apiKeySecret: string) => {
+    const [prefix, secret] = apiKeySecret.split(".", 2);
+    if (!prefix || !secret) {
+      throw new AuthError("Invalid Api Key");
+    }
+
+    const apiKey = await apiKeyRepository.findByPrefix(prefix);
+
+    if (
+      !apiKey ||
+      apiKey.is_revoked ||
+      !(await argon2.verify(apiKey.key_hash, secret))
+    ) {
+      throw new AuthError();
+    }
+
+    const actor = await actorRepository.findById(apiKey.actor_id);
+    if (!actor) {
+      throw new DataIntegrityError("Api key exists without Actor");
+    }
+
+    return actor;
   },
 };
