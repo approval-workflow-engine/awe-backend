@@ -1,37 +1,60 @@
 import { Router } from "express";
-import { workflowController } from "../controllers/workflow.controller.js";
+import { workflowGroupController } from "../controllers/workflowGroup.controller.js";
+import { authenticateRequest } from "../middlewares/auth.middleware.js";
+import { workflowVersionController } from "../controllers/workflowVersion.controller.js";
 
 export const workflowRouter = Router();
 
-workflowRouter.post("/", workflowController.createGroup);
+workflowRouter.post("/", authenticateRequest, workflowGroupController.create);
 
-workflowRouter.get("/", workflowController.listWorkflows);
+workflowRouter.get("/", authenticateRequest, workflowGroupController.list);
 
-workflowRouter.post("/validate", workflowController.validate);
+workflowRouter.post("/validate", workflowGroupController.validate);
 
-workflowRouter.get("/:workflowId", workflowController.getWorkflow);
+workflowRouter.get(
+  "/:workflowId",
+  authenticateRequest,
+  workflowGroupController.get,
+);
 
-workflowRouter.patch("/:workflowId", workflowController.updateWorkflow);
+workflowRouter.patch(
+  "/:workflowId",
+  authenticateRequest,
+  workflowGroupController.update,
+);
 
-workflowRouter.delete("/:workflowId", workflowController.deleteWorkflow);
+workflowRouter.delete(
+  "/:workflowId",
+  authenticateRequest,
+  workflowGroupController.delete,
+);
 
-workflowRouter.patch("/:workflowId/status", workflowController.changeStatus);
+workflowRouter.patch(
+  "/:workflowId/status",
+  workflowGroupController.changeStatus,
+);
 
-workflowRouter.post("/:workflowId/versions", workflowController.createVersion);
+workflowRouter.post(
+  "/:workflowId/versions",
+  workflowVersionController.createVersion,
+);
 
-workflowRouter.get("/:workflowId/versions", workflowController.listVersions);
+workflowRouter.get(
+  "/:workflowId/versions",
+  workflowVersionController.listVersions,
+);
 
 workflowRouter.get(
   "/:workflowId/versions/:versionNumber",
-  workflowController.getVersion,
+  workflowVersionController.getVersion,
 );
 
 workflowRouter.post(
   "/:workflowId/versions/:versionNumber/validate",
-  workflowController.validateVersion,
+  workflowVersionController.validateVersion,
 );
 
 workflowRouter.post(
   "/:workflowId/versions/:versionNumber/publish",
-  workflowController.publishVersion,
+  workflowVersionController.publishVersion,
 );
