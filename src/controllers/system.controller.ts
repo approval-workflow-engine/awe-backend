@@ -22,7 +22,9 @@ export const systemController = {
         },
         system: {
           name: data.name,
-          ...(data.description !== undefined && { description: data.description }),
+          ...(data.description !== undefined && {
+            description: data.description,
+          }),
         },
       });
 
@@ -34,6 +36,21 @@ export const systemController = {
         contactEmail: organization.email,
         environmentType: environment.type,
         createdAt: system.created_on,
+      },
+    });
+  },
+
+  me: (req: Request, res: Response) => {
+    res.status(200).json({
+      system: {
+        id: "sys-uuid",
+        name: "My Approval System",
+        orgName: "AWE Corp",
+        contactEmail: "admin@awe.com",
+        environmentType: "production",
+        status: "active",
+        createdAt: "2025-01-15T10:30:00.000Z",
+        updatedAt: "2025-01-15T10:30:00.000Z",
       },
     });
   },

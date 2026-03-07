@@ -132,6 +132,14 @@ export const workflowController = {
           config: {},
           position: { x: 100, y: 100 },
         },
+        {
+          id: "node-db-uuid",
+          nodeId: "task_1",
+          type: "user_task",
+          label: "userTask",
+          config: {},
+          position: { x: 100, y: 200 },
+        },
       ],
       edges: [
         {

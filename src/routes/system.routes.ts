@@ -14,3 +14,5 @@ systemRouter.patch(
   authenticateRequest,
   apiKeyController.revoke,
 );
+
+systemRouter.get("/me", authenticateRequest, systemController.me);
