@@ -65,6 +65,15 @@ function toSecretDetail(
   };
 }
 
+async function testSecretMapped(
+  secretKey: string,
+  providerId: string,
+): Promise<boolean> {
+  const secretRefs =
+    await secretReferenceRepository.findKeysByProviderId(providerId);
+  return secretRefs.some((secret) => secret.secret_key === secretKey);
+}
+
 export const secretService = {
   createNew: async (
     data: CreateNewSecretInput,
@@ -91,6 +100,12 @@ export const secretService = {
 
     const provider = getProvider(providerModel);
     const result = await provider.testSecretExists(data.key);
+
+    const isAlreadyMapped = await testSecretMapped(data.key, providerModel.id);
+
+    if (isAlreadyMapped) {
+      throw new InvalidOperationError("Secret is already mapped", result.error);
+    }
 
     if (!result.success) {
       const message = result.error ? result.error.message : "Unkown error";
@@ -121,7 +136,7 @@ export const secretService = {
 
     const items = await secretReferenceRepository.findByEnvironmentIds(
       selectedEnvironmentIds,
-      data.providerId
+      data.providerId,
     );
 
     return items.map(({ secretReference, secretProvider }) => {
@@ -185,7 +200,14 @@ export const secretService = {
     return secrets;
   },
 
-  getSecretKeysByProviderId: async (providerId: string): Promise<Omit<SecretReferenceModel, "provider_id" | "environment_id" | "created_on">[]> => {
+  getSecretKeysByProviderId: async (
+    providerId: string,
+  ): Promise<
+    Omit<
+      SecretReferenceModel,
+      "provider_id" | "environment_id" | "created_on"
+    >[]
+  > => {
     const provider = await secretProviderRepository.findById(providerId);
     if (!provider) {
       throw new NotFoundError("Secret provider");
